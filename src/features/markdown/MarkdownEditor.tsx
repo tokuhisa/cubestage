@@ -142,7 +142,7 @@ adventure;
                 <span className="text-xs text-gray-500 select-none">表示:</span>
                 <button
                   onClick={() => setPreviewMode('2d')}
-                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  className={`px-2 rounded text-xs font-medium transition-colors ${
                     previewMode === '2d'
                       ? 'bg-indigo-500 text-white'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -152,7 +152,7 @@ adventure;
                 </button>
                 <button
                   onClick={() => setPreviewMode('3d')}
-                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  className={`px-2 rounded text-xs font-medium transition-colors ${
                     previewMode === '3d'
                       ? 'bg-indigo-500 text-white'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -163,7 +163,7 @@ adventure;
               </div>
             </div>
             <div className="flex-1 overflow-auto bg-white flex justify-center">
-              <div className="w-full max-w-4xl p-4 flex justify-center">
+              <div className="w-full flex justify-center">
                 {previewMode === '2d' ? (
                   <MarkdownView text={markdownText} />
                 ) : (

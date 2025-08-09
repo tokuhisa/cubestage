@@ -12,9 +12,16 @@
     "format:check": "npx prettier --check ."
   },
   "dependencies": {
+    "hastscript": "^9.0.1",
+    "quickjs-emscripten": "^0.31.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "tailwindcss": "^4.1.11"
+    "rehype-react": "^8.0.0",
+    "remark-directive": "^4.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "tailwindcss": "^4.1.11",
+    "unified": "^11.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",

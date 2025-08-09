@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { MarkdownView } from "./MarkdownView"
+import { Markdown3DView } from "./Markdown3DView"
 
 export function MarkdownEditor() {
   const [markdownText, setMarkdownText] = useState(`# ビジュアルノベル作成システム
@@ -72,6 +73,8 @@ adventure;
 `)
   
   const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('split')
+  // 2D / 3D プレビュー切替（Markdown 基本機能と独立した追加機能）
+  const [previewMode, setPreviewMode] = useState<'2d' | '3d'>('2d')
 
   return (
     <div className="h-screen flex flex-col">
@@ -133,12 +136,39 @@ adventure;
         {/* プレビューエリア */}
         {(viewMode === 'preview' || viewMode === 'split') && (
           <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} flex flex-col`}>
-            <div className="bg-gray-50 px-4 py-2 border-b">
-              <h2 className="text-sm font-medium text-gray-700">プレビュー</h2>
+            <div className="bg-gray-50 px-4 py-2 border-b flex items-center justify-between">
+              <h2 className="text-sm font-medium text-gray-700">プレビュー ({previewMode.toUpperCase()})</h2>
+              <div className="flex gap-2 items-center">
+                <span className="text-xs text-gray-500 select-none">表示:</span>
+                <button
+                  onClick={() => setPreviewMode('2d')}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    previewMode === '2d'
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  2D
+                </button>
+                <button
+                  onClick={() => setPreviewMode('3d')}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    previewMode === '3d'
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  3D
+                </button>
+              </div>
             </div>
             <div className="flex-1 overflow-auto bg-white flex justify-center">
               <div className="w-full max-w-4xl p-4 flex justify-center">
-                <MarkdownView text={markdownText} />
+                {previewMode === '2d' ? (
+                  <MarkdownView text={markdownText} />
+                ) : (
+                  <Markdown3DView text={markdownText} />
+                )}
               </div>
             </div>
           </div>

@@ -1,7 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, type JSX } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { ContactShadows, Environment, Html, OrbitControls, Box, Plane } from '@react-three/drei'
-import { MarkdownView } from './MarkdownView'
 
 // プレゼンテーション会場のセットアップ
 function PresentationHall() {
@@ -91,10 +90,10 @@ function PresentationHall() {
 }
 
 export interface Props {
-  text: string;
+  children?: JSX.Element | JSX.Element[];
 }
 
-export const Markdown3DView = (props: Props) => {
+export const Stage = (props: Props) => {
   return (
     <Canvas camera={{ position: [0, 4, 8], fov: 75 }}>
       {/* 照明設定（プロジェクター風） */}
@@ -129,7 +128,7 @@ export const Markdown3DView = (props: Props) => {
           backdropFilter: 'blur(1px)'
         }}
       >
-        <MarkdownView text={props.text} />
+        {props.children}
       </Html>
       
       {/* 環境と影 */}

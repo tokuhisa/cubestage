@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { MarkdownView } from "./MarkdownView"
-import { Markdown3DView } from "./Markdown3DView"
 
 export function MarkdownEditor() {
   const [markdownText, setMarkdownText] = useState(`# DeskStage
@@ -140,11 +139,7 @@ DeskStageは、3D空間を利用した新しいプレゼンテーション体験
             </div>
             <div className="flex-1 overflow-auto bg-white flex justify-center">
               <div className="w-full flex justify-center">
-                {previewMode === '2d' ? (
-                  <MarkdownView text={markdownText} />
-                ) : (
-                  <Markdown3DView text={markdownText} />
-                )}
+                <MarkdownView text={markdownText} previewMode={previewMode} />
               </div>
             </div>
           </div>

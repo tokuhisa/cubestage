@@ -11,6 +11,7 @@ import { JavaScriptExecutor } from "./directives/JavaScriptExecutor";
 import { TextInput } from "./directives/TextInput";
 import { Button } from "./directives/Button";
 import { ResultDisplay } from "./directives/ResultDisplay";
+import { Stage } from "../stage/Stage";
 
 const components = {
   js: JavaScriptExecutor,
@@ -21,25 +22,29 @@ const components = {
 
 export interface Props {
   text: string;
+  previewMode: "2d" | "3d";
 }
 
 export const MarkdownView = (props: Props) => {
-  const { text } = props;
+  const { text, previewMode } = props;
   const [scenes, setScenes] = useState<JSX.Element[]>([]);
   const [currentScene, setCurrentScene] = useState(0);
 
   useEffect(() => {
     const update = async () => {
       // Split text by horizontal rules (---)
-      const sceneTexts = text.split(/^---$/m).map(scene => scene.trim()).filter(scene => scene.length > 0);
-      
+      const sceneTexts = text
+        .split(/^---$/m)
+        .map((scene) => scene.trim())
+        .filter((scene) => scene.length > 0);
+
       if (sceneTexts.length === 0) {
         setScenes([createElement(Fragment)]);
         return;
       }
 
       const processedScenes: JSX.Element[] = [];
-      
+
       for (const sceneText of sceneTexts) {
         const processor = unified();
         processor.use(remarkParse);
@@ -53,11 +58,11 @@ export const MarkdownView = (props: Props) => {
         const file = await processor.process(sceneText);
         processedScenes.push(file.result as JSX.Element);
       }
-      
+
       setScenes(processedScenes);
       setCurrentScene(0);
     };
-    
+
     update().catch((err: unknown) => {
       console.error("Error processing markdown:", err);
     });
@@ -85,12 +90,22 @@ export const MarkdownView = (props: Props) => {
     <MarkdownContextProvider>
       <div className="flex flex-col h-full w-full">
         {/* Scene content */}
-        <div className="flex-1 overflow-auto">
-          <article className="prose prose-slate max-w-none m-4">
-            {scenes[currentScene] || createElement(Fragment)}
-          </article>
-        </div>
-        
+        {previewMode === "2d" ? (
+          <div className="flex-1 overflow-auto">
+            <article className="prose prose-slate max-w-none m-4">
+              {scenes[currentScene] || createElement(Fragment)}
+            </article>
+          </div>
+        ) : (
+          <Stage>
+            <div className="flex-1 overflow-auto">
+              <article className="prose prose-slate max-w-none m-4">
+                {scenes[currentScene] || createElement(Fragment)}
+              </article>
+            </div>
+          </Stage>
+        )}
+
         {/* Navigation controls */}
         {scenes.length > 1 && (
           <div className="flex items-center justify-between p-4 bg-gray-50 border-t">
@@ -101,7 +116,7 @@ export const MarkdownView = (props: Props) => {
             >
               前のシーン
             </button>
-            
+
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">
                 {currentScene + 1} / {scenes.length}
@@ -112,14 +127,16 @@ export const MarkdownView = (props: Props) => {
                     key={index}
                     onClick={() => goToScene(index)}
                     className={`w-2 h-2 rounded-full transition-colors ${
-                      index === currentScene ? 'bg-blue-500' : 'bg-gray-300 hover:bg-gray-400'
+                      index === currentScene
+                        ? "bg-blue-500"
+                        : "bg-gray-300 hover:bg-gray-400"
                     }`}
                     title={`シーン ${index + 1} に移動`}
                   />
                 ))}
               </div>
             </div>
-            
+
             <button
               onClick={nextScene}
               disabled={currentScene === scenes.length - 1}

@@ -83,10 +83,10 @@ export const MarkdownView = (props: Props) => {
 
   return (
     <MarkdownContextProvider>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full w-full">
         {/* Scene content */}
         <div className="flex-1 overflow-auto">
-          <article className="prose prose-slate max-w-none">
+          <article className="prose prose-slate max-w-none m-4">
             {scenes[currentScene] || createElement(Fragment)}
           </article>
         </div>

@@ -3,73 +3,49 @@ import { MarkdownView } from "./MarkdownView"
 import { Markdown3DView } from "./Markdown3DView"
 
 export function MarkdownEditor() {
-  const [markdownText, setMarkdownText] = useState(`# ビジュアルノベル作成システム
+  const [markdownText, setMarkdownText] = useState(`# DeskStage
 
-Visvelを使用してインタラクティブなビジュアルノベルを作成できます。
+**3D空間プレゼンテーションツール**
 
-**---** を使ってシーンを分けることができます。
+DeskStageは、3D空間を利用した新しいプレゼンテーション体験を作成するツールです。
+従来の平面的なスライドショーを超え、Markdownコンテンツを3Dビジュアライゼーションとして表示できます。
 
-## シーン1: 主人公の紹介
+## 🌟 主な特徴
 
-あなたは魔法学院の新入生です。
+### ✨ 革新的な3D表示
+- リアルなプレゼンテーション会場環境
+- プロジェクタースクリーン風の投影表示
+- インタラクティブなカメラコントロール
 
-::textinput[お名前]{id="name" placeholder="あなたの名前を入力してください"}
+### 📝 シンプルなMarkdown編集
+- リアルタイム編集・プレビュー
+- 2D/3D表示の切り替え
+- 美しいタイポグラフィ
 
-::button[自己紹介]{eventId="introduction" variant="primary"}
+## 🎯 使い方
 
-:::js{eventId="introduction" resultId="intro-result"}
-const name = inputs.name || "名無しの魔法使い";
-const introduction = \`私の名前は\${name}です。魔法学院での生活が楽しみです！\`;
-introduction;
-:::
+右上のボタンで **2D** と **3D** の表示を切り替えてみてください。
 
-::resultdisplay[]{resultId="intro-result"}
+3D表示では：
+- **ドラッグ**: カメラの回転
+- **スクロール**: ズーム
+- **右ドラッグ**: パン（移動）
 
----
+## 📊 サンプルコンテンツ
 
-## シーン2: 魔法の選択
+### チーム紹介
+- 開発者A: フロントエンド担当
+- 開発者B: 3D表示担当
+- 開発者C: UX/UI担当
 
-魔法学院では様々な魔法を学ぶことができます。
-
-### どの系統の魔法を学びますか？
-
-::textinput[魔法系統]{id="magic-type" placeholder="火、水、風、土のいずれかを入力"}
-
-::button[魔法を選択]{eventId="magic-choice" variant="primary"}
-
-:::js{eventId="magic-choice" resultId="magic-result"}
-const name = inputs.name || "名無しの魔法使い";
-const magicType = inputs["magic-type"] || "汎用";
-const result = \`\${name}は\${magicType}系統の魔法を選択しました！\`;
-result;
-:::
-
-::resultdisplay[]{resultId="magic-result"}
+### 技術スタック
+1. **React + TypeScript**: モダンなUI構築
+2. **Three.js**: WebGL 3Dグラフィックス
+3. **Tailwind CSS**: スタイリング
 
 ---
 
-## シーン3: 冒険の始まり
-
-魔法を習得したあなたは、初めての冒険に出発します。
-
-### 装備を選択してください
-
-- 魔法の杖
-- 魔法の本
-- 護符
-
-::button[冒険開始]{eventId="adventure" variant="primary"}
-
-:::js{eventId="adventure" resultId="adventure-result"}
-const name = inputs.name || "名無しの魔法使い";
-const magicType = inputs["magic-type"] || "汎用";
-const adventure = \`魔法使い\${name}の\${magicType}魔法を使った冒険が始まりました！\\n\\n運命はあなたの手の中にあります...\`;
-adventure;
-:::
-
-::resultdisplay[]{resultId="adventure-result"}
-
-**物語はまだ続きます...**
+**このエディターで自由にMarkdownを編集して、3D空間での新しいプレゼンテーション体験をお楽しみください！**
 `)
   
   const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('split')

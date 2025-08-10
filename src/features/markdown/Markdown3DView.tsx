@@ -1,38 +1,93 @@
-import * as THREE from 'three'
 import { useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { ContactShadows, Environment, Float, Html, OrbitControls } from '@react-three/drei'
-import { MathUtils } from 'three'
+import { ContactShadows, Environment, Html, OrbitControls, Box, Plane } from '@react-three/drei'
 import { MarkdownView } from './MarkdownView'
 
-const material = new THREE.MeshStandardMaterial()
-const geometries = [
-  { geometry: new THREE.TetrahedronGeometry(2) },
-  { geometry: new THREE.CylinderGeometry(0.8, 0.8, 2, 32) },
-  { geometry: new THREE.ConeGeometry(1.1, 1.7, 32) },
-  { geometry: new THREE.SphereGeometry(1.5, 32, 32) },
-  { geometry: new THREE.IcosahedronGeometry(2) },
-  { geometry: new THREE.TorusGeometry(1.1, 0.35, 16, 32) },
-  { geometry: new THREE.OctahedronGeometry(2) },
-  { geometry: new THREE.SphereGeometry(1.5, 32, 32) },
-  { geometry: new THREE.BoxGeometry(2.5, 2.5, 2.5) }
-]
+// プレゼンテーション会場のセットアップ
+function PresentationHall() {
+  // 椅子を配置するための関数
+  const chairs = useMemo(() => {
+    const chairPositions = []
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 8; col++) {
+        chairPositions.push([
+          (col - 3.5) * 1.5, // x座標
+          -0.8, // y座標（床より少し上）
+          2 + row * 1.2 // z座標（スクリーンから離れて）
+        ])
+      }
+    }
+    return chairPositions
+  }, [])
 
-function Geometries() {
-  const n = 40
-  const randProps = useMemo(() => Array.from({ length: n }, () => geometries[Math.floor(Math.random() * geometries.length)]), [])
-  return randProps.map((prop) => {
-    return (
-      <Float>
-        <mesh
-          scale={MathUtils.randFloat(0.25, 0.5)}
-          position={[MathUtils.randFloat(-8, 8), MathUtils.randFloat(-8, 8), MathUtils.randFloat(-8, 8)]}
-          geometry={prop.geometry}
-          material={material}
-        />
-      </Float>
-    )
-  })
+  return (
+    <>
+      {/* 床 */}
+      <Plane args={[20, 15]} rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]}>
+        <meshStandardMaterial color="#2a2a2a" />
+      </Plane>
+
+      {/* 天井 */}
+      <Plane args={[20, 15]} rotation={[Math.PI / 2, 0, 0]} position={[0, 10, 0]}>
+        <meshStandardMaterial color="#f0f0f0" />
+      </Plane>
+
+      {/* 後ろの壁（プロジェクション用） */}
+      <Plane args={[20, 11]} position={[0, 4.5, -7]}>
+        <meshStandardMaterial color="#f5f5f5" roughness={0.8} metalness={0.1} />
+      </Plane>
+
+      {/* 左右の壁 */}
+      <Plane args={[15, 11]} rotation={[0, Math.PI / 2, 0]} position={[-10, 4.5, 0]}>
+        <meshStandardMaterial color="#1a1a1a" />
+      </Plane>
+      <Plane args={[15, 11]} rotation={[0, -Math.PI / 2, 0]} position={[10, 4.5, 0]}>
+        <meshStandardMaterial color="#1a1a1a" />
+      </Plane>
+
+      {/* スクリーンフレーム */}
+      <Box args={[15.5, 8.5, 0.1]} position={[0, 4.5, -6.85]}>
+        <meshStandardMaterial color="#2a2a2a" />
+      </Box>
+
+      {/* 椅子 */}
+      {chairs.map((position, index) => (
+        <group key={index} position={[position[0], position[1], position[2]]}>
+          {/* 座面 */}
+          <Box args={[0.5, 0.1, 0.5]} position={[0, 0.3, 0]}>
+            <meshStandardMaterial color="#4a4a4a" />
+          </Box>
+          {/* 背もたれ（スクリーン側に向ける） */}
+          <Box args={[0.5, 0.8, 0.1]} position={[0, 0.7, 0.2]}>
+            <meshStandardMaterial color="#4a4a4a" />
+          </Box>
+          {/* 脚（座面の下に配置し、重複を避ける） */}
+          <Box args={[0.08, 0.55, 0.08]} position={[-0.18, 0.025, -0.18]}>
+            <meshStandardMaterial color="#333333" />
+          </Box>
+          <Box args={[0.08, 0.55, 0.08]} position={[0.18, 0.025, -0.18]}>
+            <meshStandardMaterial color="#333333" />
+          </Box>
+          <Box args={[0.08, 0.55, 0.08]} position={[-0.18, 0.025, 0.18]}>
+            <meshStandardMaterial color="#333333" />
+          </Box>
+          <Box args={[0.08, 0.55, 0.08]} position={[0.18, 0.025, 0.18]}>
+            <meshStandardMaterial color="#333333" />
+          </Box>
+        </group>
+      ))}
+
+      {/* プロジェクター（天井近くに配置） */}
+      <Box args={[0.6, 0.3, 1]} position={[0, 9.5, 3]}>
+        <meshStandardMaterial color="#2a2a2a" />
+      </Box>
+
+      {/* 演台（スクリーン前の右端に配置、床に接触） */}
+      <Box args={[1.2, 1.5, 0.8]} position={[6, -0.25, -4.5]}>
+        <meshStandardMaterial color="#8b4513" />
+      </Box>
+    </>
+  )
 }
 
 export interface Props {
@@ -41,17 +96,56 @@ export interface Props {
 
 export const Markdown3DView = (props: Props) => {
   return (
-    <Canvas camera={{ position: [0, 0, 22.5] }}>
-      <hemisphereLight groundColor="red" />
-      <Float floatIntensity={10} rotationIntensity={4}>
-        <Html style={{ userSelect: 'none' }} castShadow receiveShadow occlude="blending" transform>
-            <MarkdownView text={props.text} />
-        </Html>
-      </Float>
-      <Geometries />
-      <Environment background preset="dawn" blur={0.8} />
-      <ContactShadows position={[0, -9, 0]} opacity={0.7} scale={40} blur={1} />
-      <OrbitControls />
+    <Canvas camera={{ position: [0, 4, 8], fov: 75 }}>
+      {/* 照明設定（プロジェクター風） */}
+      <ambientLight intensity={0.2} />
+      <directionalLight position={[10, 15, 5]} intensity={0.6} />
+      <pointLight position={[0, 8, 0]} intensity={0.4} />
+      {/* プロジェクター光源（天井近くのプロジェクターに合わせる） */}
+      <spotLight 
+        position={[0, 9.5, 3]} 
+        target-position={[0, 4.5, -6.8]}
+        intensity={1.5}
+        angle={0.35}
+        penumbra={0.2}
+        color="#ffffff"
+      />
+      
+      {/* プレゼンテーション会場 */}
+      <PresentationHall />
+      
+      {/* スライド（MarkdownView）を壁に投影風に表示 */}
+      <Html
+        position={[0, 4.5, -6.75]}
+        transform
+        occlude="blending"
+        style={{
+          width: '600px',
+          height: '320px',
+          background: 'rgba(255,255,255,0.95)',
+          border: 'none',
+          boxShadow: '0 0 40px rgba(255,255,255,0.6), 0 0 80px rgba(200,200,255,0.3)',
+          overflow: 'auto',
+          backdropFilter: 'blur(1px)'
+        }}
+      >
+        <MarkdownView text={props.text} />
+      </Html>
+      
+      {/* 環境と影 */}
+      <Environment preset="warehouse" />
+      <ContactShadows position={[0, -0.99, 0]} opacity={0.4} scale={15} blur={2} far={20} />
+      
+      {/* カメラコントロール */}
+      <OrbitControls 
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+        maxPolarAngle={Math.PI / 2}
+        minDistance={3}
+        maxDistance={15}
+        target={[0, 1, -2]}
+      />
     </Canvas>
   )
 }

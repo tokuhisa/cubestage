@@ -1,10 +1,10 @@
-import { MarkdownEditor } from "./features/markdown/MarkdownEditor";
+import { Editor } from "./features/editor/Editor";
 
 function App() {
 
   return (
     <>
-      <MarkdownEditor />
+      <Editor />
     </>
   );
 }

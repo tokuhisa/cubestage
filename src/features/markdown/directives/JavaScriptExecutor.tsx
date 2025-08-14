@@ -1,27 +1,27 @@
 import { useState, useEffect } from "react";
 import { getQuickJS } from "quickjs-emscripten";
-import { useMarkdownContext } from "../MarkdownContext";
+import { useMarkdownContext, type ExecutionResult } from "../MarkdownContext";
 import type {
   ContainerDirective,
   LeafDirective,
   TextDirective,
 } from "mdast-util-directive";
-import {VFile} from 'vfile'
+import { VFile } from "vfile";
 import { setupDirectiveNode } from "./directive";
 
 /**
  * Safely convert unknown value to string for display
  */
 const safeStringify = (value: unknown): string => {
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number') return value.toString();
-  if (typeof value === 'boolean') return value.toString();
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return value.toString();
+  if (typeof value === "boolean") return value.toString();
   return JSON.stringify(value);
 };
 
 export const handleJavascriptExecutorNode = (
   node: ContainerDirective | LeafDirective | TextDirective,
-  file: VFile
+  file: VFile,
 ) => {
   if (node.name !== "js") {
     return;
@@ -37,13 +37,15 @@ export const handleJavascriptExecutorNode = (
   const startLine = node.position?.start.line ?? 0;
   const endLine = node.position?.end.line ?? lines.length;
 
-  const codeContent = lines.slice(startLine, endLine - 1).join("\n").trim();
+  const codeContent = lines
+    .slice(startLine, endLine - 1)
+    .join("\n")
+    .trim();
   data.hProperties = { ...data.hProperties, codeContent };
   node.children = [];
 
   return;
 };
-
 
 export interface Props {
   children?: React.ReactNode;
@@ -56,15 +58,12 @@ export interface Props {
  * Component that executes JavaScript code using QuickJS in a sandboxed environment
  */
 export const JavaScriptExecutor = (props: Props) => {
-  const [executionLog, setExecutionLog ] = useState<string>("");
+  const [executionLog, setExecutionLog] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [showCode, setShowCode] = useState(false);
-  const {
-    inputValues,
-    executionTriggers,
-    setExecutionResult,
-  } = useMarkdownContext();
+  const { inputValues, executionTriggers, setExecutionResult } =
+    useMarkdownContext();
   const { codeContent, resultId, eventId } = props;
   const eventTimestamp = executionTriggers[eventId ?? ""]?.timestamp ?? null;
 
@@ -103,7 +102,7 @@ export const JavaScriptExecutor = (props: Props) => {
       // Execute the code
       const evalResult = vm.evalCode(code);
 
-      let executionResult: unknown;
+      let executionResult: ExecutionResult;
       if (evalResult.error) {
         const errorMsg = vm.dump(evalResult.error) as unknown;
         const errorString =
@@ -157,7 +156,6 @@ export const JavaScriptExecutor = (props: Props) => {
     }
   }, [eventTimestamp]);
 
-
   return (
     <div className="border border-gray-300 rounded-lg p-4 my-4">
       <div className="flex items-center justify-between mb-2">
@@ -170,20 +168,20 @@ export const JavaScriptExecutor = (props: Props) => {
           )}
         </h4>
         <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowCode(!showCode)}
-              className="text-xs text-blue-600 hover:text-blue-800 underline"
-            >
-              {showCode ? "コードを隠す" : "コードを表示"}
-            </button>
-            <button
-              type="button"
-              onClick={() => executeCode()}
-              className="text-xs text-blue-600 hover:text-blue-800 underline"
-            >
-              コードを実行
-            </button>
+          <button
+            type="button"
+            onClick={() => setShowCode(!showCode)}
+            className="text-xs text-blue-600 hover:text-blue-800 underline"
+          >
+            {showCode ? "コードを隠す" : "コードを表示"}
+          </button>
+          <button
+            type="button"
+            onClick={() => executeCode()}
+            className="text-xs text-blue-600 hover:text-blue-800 underline"
+          >
+            コードを実行
+          </button>
           {isLoading && (
             <span className="text-sm text-blue-600">実行中...</span>
           )}

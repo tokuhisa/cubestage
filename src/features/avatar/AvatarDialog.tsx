@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { vrmLoader } from "./vrmUtils";
 import { VRM, type VRMMeta } from "@pixiv/three-vrm";
 import * as THREE from "three";
@@ -31,6 +31,99 @@ export const AvatarDialog = ({ onClose }: AvatarDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [vrmMetadata, setVrmMetadata] = useState<VRMMetadata | null>(null);
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
+  const [existingVrmInfo, setExistingVrmInfo] = useState<{fileName: string, metadata: VRMMetadata} | null>(null);
+  const [existingVrmaInfo, setExistingVrmaInfo] = useState<{fileName: string} | null>(null);
+  const [isLoadingExisting, setIsLoadingExisting] = useState(true);
+
+  // 既存ファイル情報を読み込む関数
+  const loadExistingFiles = async () => {
+    setIsLoadingExisting(true);
+    try {
+      const opfsRoot = await navigator.storage.getDirectory();
+      
+      // VRMファイルをチェック
+      try {
+        const vrmFileHandle = await opfsRoot.getFileHandle('avatar.vrm');
+        const vrmFile = await vrmFileHandle.getFile();
+        const vrmUrl = URL.createObjectURL(vrmFile);
+        
+        // VRMメタデータを読み込み
+        vrmLoader.load(vrmUrl, (gltf) => {
+          const vrm: VRM = gltf.userData.vrm;
+          const meta: VRMMeta = vrm.meta;
+          
+          const getThumbnailUrl = (thumbnail: HTMLImageElement | THREE.Texture | undefined) => {
+            if (!thumbnail) return undefined;
+            
+            if (thumbnail instanceof HTMLImageElement) {
+              return thumbnail.src;
+            } else if ('image' in thumbnail && thumbnail.image instanceof HTMLImageElement) {
+              return thumbnail.image.src;
+            }
+            return undefined;
+          };
+
+          let metadata: VRMMetadata;
+          if (meta.metaVersion === '1') {
+            metadata = {
+              title: meta.name,
+              version: meta.version,
+              author: meta.authors?.[0],
+              contactInformation: meta.contactInformation,
+              reference: meta.references?.[0],
+              allowedUserName: meta.avatarPermission,
+              violentUssageName: meta.allowExcessivelyViolentUsage ? 'Allow' : 'Disallow',
+              sexualUssageName: meta.allowExcessivelySexualUsage ? 'Allow' : 'Disallow',
+              commercialUssageName: meta.commercialUsage,
+              licenseName: meta.licenseUrl,
+              otherLicenseUrl: meta.otherLicenseUrl,
+              thumbnailUrl: getThumbnailUrl(meta.thumbnailImage),
+            };
+          } else {
+            metadata = {
+              title: meta.title,
+              version: meta.version,
+              author: meta.author,
+              contactInformation: meta.contactInformation,
+              reference: meta.reference,
+              allowedUserName: meta.allowedUserName,
+              violentUssageName: meta.violentUssageName,
+              sexualUssageName: meta.sexualUssageName,
+              commercialUssageName: meta.commercialUssageName,
+              licenseName: meta.licenseName,
+              otherLicenseUrl: meta.otherLicenseUrl,
+              thumbnailUrl: getThumbnailUrl(meta.texture),
+            };
+          }
+          
+          setExistingVrmInfo({
+            fileName: 'avatar.vrm',
+            metadata: metadata
+          });
+          
+          URL.revokeObjectURL(vrmUrl);
+        });
+      } catch {
+        setExistingVrmInfo(null);
+      }
+      
+      // VRMAファイルをチェック
+      try {
+        const vrmaFileHandle = await opfsRoot.getFileHandle('avatar.vrma');
+        await vrmaFileHandle.getFile();
+        setExistingVrmaInfo({ fileName: 'avatar.vrma' });
+      } catch {
+        setExistingVrmaInfo(null);
+      }
+      
+    } catch (error) {
+      console.error('Failed to load existing files from OPFS:', error);
+      setExistingVrmInfo(null);
+      setExistingVrmaInfo(null);
+    } finally {
+      setIsLoadingExisting(false);
+    }
+  };
 
   const loadVrmMetadata = async (file: File) => {
     setIsLoadingMetadata(true);
@@ -110,27 +203,68 @@ export const AvatarDialog = ({ onClose }: AvatarDialogProps) => {
     }
   };
 
+  // 初回読み込み時に既存ファイルをチェック
+  useEffect(() => {
+    loadExistingFiles();
+  }, []);
+
+  // 既存ファイルを削除する関数
+  const deleteExistingFile = async (fileType: 'vrm' | 'vrma') => {
+    const fileTypeName = fileType === 'vrm' ? 'VRMファイル' : 'VRMAファイル';
+    
+    if (!confirm(`${fileTypeName}を削除しますか？\nこの操作は取り消せません。`)) {
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const opfsRoot = await navigator.storage.getDirectory();
+      const fileName = fileType === 'vrm' ? 'avatar.vrm' : 'avatar.vrma';
+      
+      await opfsRoot.removeEntry(fileName);
+      
+      // カスタムイベントを発行してアバターの再読み込みを通知
+      window.dispatchEvent(new Event('avatar-files-updated'));
+      
+      // 既存ファイル情報を再読み込み
+      await loadExistingFiles();
+      
+    } catch (error) {
+      console.error(`Failed to delete ${fileType} file:`, error);
+      alert(`${fileTypeName}の削除に失敗しました。`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const saveToOPFS = async () => {
-    if (!vrmFile || !vrmaFile) return;
+    if (!vrmFile && !vrmaFile) return;
     
     setIsLoading(true);
     try {
       const opfsRoot = await navigator.storage.getDirectory();
       
-      // VRMファイルを保存
-      const vrmFileHandle = await opfsRoot.getFileHandle('avatar.vrm', { create: true });
-      const vrmWritable = await vrmFileHandle.createWritable();
-      await vrmWritable.write(vrmFile);
-      await vrmWritable.close();
+      // VRMファイルが選択されている場合のみ保存
+      if (vrmFile) {
+        const vrmFileHandle = await opfsRoot.getFileHandle('avatar.vrm', { create: true });
+        const vrmWritable = await vrmFileHandle.createWritable();
+        await vrmWritable.write(vrmFile);
+        await vrmWritable.close();
+      }
       
-      // VRMAファイルを保存
-      const vrmaFileHandle = await opfsRoot.getFileHandle('avatar.vrma', { create: true });
-      const vrmaWritable = await vrmaFileHandle.createWritable();
-      await vrmaWritable.write(vrmaFile);
-      await vrmaWritable.close();
+      // VRMAファイルが選択されている場合のみ保存
+      if (vrmaFile) {
+        const vrmaFileHandle = await opfsRoot.getFileHandle('avatar.vrma', { create: true });
+        const vrmaWritable = await vrmaFileHandle.createWritable();
+        await vrmaWritable.write(vrmaFile);
+        await vrmaWritable.close();
+      }
       
       // カスタムイベントを発行してアバターの再読み込みを通知
       window.dispatchEvent(new Event('avatar-files-updated'));
+      
+      // 既存ファイル情報を再読み込み
+      await loadExistingFiles();
       
       onClose();
     } catch (error) {
@@ -144,6 +278,85 @@ export const AvatarDialog = ({ onClose }: AvatarDialogProps) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000000]">
       <div className="bg-white rounded-lg p-6 w-[32rem] max-w-full mx-4 max-h-[80vh] overflow-y-auto">
         <h2 className="text-xl font-semibold mb-4">アバター設定</h2>
+        
+        {/* 既存ファイル情報表示 */}
+        {isLoadingExisting ? (
+          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+            <p className="text-sm text-gray-500">既存ファイルを確認中...</p>
+          </div>
+        ) : (existingVrmInfo || existingVrmaInfo) ? (
+          <div className="bg-blue-50 p-4 rounded-lg mb-4">
+            <h3 className="text-sm font-medium text-blue-800 mb-2">現在保存されているファイル</h3>
+            
+            {existingVrmInfo && (
+              <div className="mb-3">
+                <div className="flex items-start gap-3">
+                  {existingVrmInfo.metadata.thumbnailUrl && (
+                    <img 
+                      src={existingVrmInfo.metadata.thumbnailUrl} 
+                      alt="現在のVRMサムネイル" 
+                      className="w-12 h-12 object-cover rounded border"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  )}
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-blue-900">
+                          📁 {existingVrmInfo.fileName}
+                        </p>
+                        {existingVrmInfo.metadata.title && (
+                          <p className="text-xs text-blue-700">
+                            {existingVrmInfo.metadata.title}
+                            {existingVrmInfo.metadata.author && ` by ${existingVrmInfo.metadata.author}`}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => deleteExistingFile('vrm')}
+                        disabled={isLoading}
+                        className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded border border-red-200 hover:border-red-300 disabled:opacity-50"
+                        title="VRMファイルを削除"
+                      >
+                        削除
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {existingVrmaInfo && (
+              <div className="mb-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-blue-900">
+                    🎬 {existingVrmaInfo.fileName}
+                  </p>
+                  <button
+                    onClick={() => deleteExistingFile('vrma')}
+                    disabled={isLoading}
+                    className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded border border-red-200 hover:border-red-300 disabled:opacity-50"
+                    title="VRMAファイルを削除"
+                  >
+                    削除
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <p className="text-xs text-blue-600 mt-2">
+              新しいファイルを選択すると、該当する既存のファイルが置き換えられます。
+            </p>
+          </div>
+        ) : (
+          <div className="bg-yellow-50 p-4 rounded-lg mb-4">
+            <p className="text-sm text-yellow-800">
+              まだアバターファイルが保存されていません。VRMファイルまたはVRMAファイル（もしくは両方）を選択してください。
+            </p>
+          </div>
+        )}
         
         <div className="space-y-4">
           <div>
@@ -282,7 +495,7 @@ export const AvatarDialog = ({ onClose }: AvatarDialogProps) => {
           </button>
           <button
             onClick={saveToOPFS}
-            disabled={!vrmFile || !vrmaFile || isLoading}
+            disabled={(!vrmFile && !vrmaFile) || isLoading}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? '保存中...' : '保存'}

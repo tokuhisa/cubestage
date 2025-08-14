@@ -147,7 +147,7 @@ export const Stage = (props: Props) => {
         target={[0, 1, -2]}
       />
 
-      <group position={[6, -1, -5.2]} rotation={[0, Math.PI, 0]}>
+      <group position={[6, -1, -5.5]} rotation={[0, Math.PI, 0]}>
         <Avatar />
       </group>
     </Canvas>

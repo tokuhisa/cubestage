@@ -9,8 +9,6 @@ import {
   VRMLookAtQuaternionProxy,
 } from "@pixiv/three-vrm-animation";
 
-const modelUrl = "/AliciaSolid_vrm-0.51.vrm";
-const animationUrl = "/VRMA_01.vrma";
 
 const loader = new GLTFLoader();
 loader.register((parser) => new VRMLoaderPlugin(parser));
@@ -19,9 +17,64 @@ loader.register((parser) => new VRMAnimationLoaderPlugin(parser));
 export const Avatar = () => {
   const [vrmModel, setVrmModel] = useState<VRM | null>(null);
   const [vrmAnimation, setVrmAnimation] = useState<VRMAnimation | null>(null);
+  const [modelUrl, setModelUrl] = useState<string | null>(null);
+  const [animationUrl, setAnimationUrl] = useState<string | null>(null);
+
+  // OPFSからファイルを読み込んでURLを生成する関数
+  const loadFromOPFS = async () => {
+    try {
+      const opfsRoot = await navigator.storage.getDirectory();
+      
+      // VRMファイルを読み込み
+      try {
+        const vrmFileHandle = await opfsRoot.getFileHandle('avatar.vrm');
+        const vrmFile = await vrmFileHandle.getFile();
+        const vrmObjectURL = URL.createObjectURL(vrmFile);
+        setModelUrl(vrmObjectURL);
+      } catch {
+        // ファイルが存在しない場合はnullに設定
+        setModelUrl(null);
+      }
+      
+      // VRMAファイルを読み込み
+      try {
+        const vrmaFileHandle = await opfsRoot.getFileHandle('avatar.vrma');
+        const vrmaFile = await vrmaFileHandle.getFile();
+        const vrmaObjectURL = URL.createObjectURL(vrmaFile);
+        setAnimationUrl(vrmaObjectURL);
+      } catch {
+        // ファイルが存在しない場合はnullに設定
+        setAnimationUrl(null);
+      }
+    } catch (error) {
+      console.error('Failed to load files from OPFS:', error);
+      // エラーの場合はnullに設定
+      setModelUrl(null);
+      setAnimationUrl(null);
+    }
+  };
+
+  // 初回読み込み時とファイル更新時にOPFSから読み込み
+  useEffect(() => {
+    loadFromOPFS();
+
+    // ファイル更新イベントのリスナーを追加
+    const handleAvatarFilesUpdate = () => {
+      // 既存のモデルとアニメーションをリセット
+      setVrmModel(null);
+      setVrmAnimation(null);
+      // OPFSから再読み込み
+      loadFromOPFS();
+    };
+
+    window.addEventListener('avatar-files-updated', handleAvatarFilesUpdate);
+    return () => {
+      window.removeEventListener('avatar-files-updated', handleAvatarFilesUpdate);
+    };
+  }, []);
 
   useEffect(() => {
-    if (vrmModel !== null) {
+    if (vrmModel !== null || !modelUrl) {
       return;
     }
 
@@ -47,10 +100,10 @@ export const Avatar = () => {
 
       setVrmModel(vrm);
     });
-  }, [vrmModel]);
+  }, [vrmModel, modelUrl]);
 
   useEffect(() => {
-    if (vrmAnimation !== null) {
+    if (vrmAnimation !== null || !animationUrl) {
       return;
     }
 
@@ -59,7 +112,7 @@ export const Avatar = () => {
       console.log("VRM animation loaded:", vrmAnimations);
       setVrmAnimation(vrmAnimations[0]);
     });
-  }, [vrmAnimation]);
+  }, [vrmAnimation, animationUrl]);
 
   useEffect(() => {
     if (vrmModel === null || vrmAnimation === null) {
@@ -92,7 +145,10 @@ export const Avatar = () => {
     }
   }, [vrmModel, vrmAnimation]);
 
-  return (
-    <>{vrmModel !== null ? <primitive object={vrmModel.scene} /> : null}</>
-  );
+  // OPFSにファイルが存在しない場合は何も表示しない
+  if (!modelUrl || !animationUrl || !vrmModel) {
+    return null;
+  }
+
+  return <primitive object={vrmModel.scene} />;
 };

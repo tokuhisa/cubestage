@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Preview } from "../preview/Preview"
+import { AvatarDialog } from "../avatar/AvatarDialog"
 
 export function Editor() {
   const [markdownText, setMarkdownText] = useState(`# DeskStage
@@ -50,6 +51,7 @@ DeskStageは、3D空間を利用した新しいプレゼンテーション体験
   const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('split')
   // 2D / 3D プレビュー切替（Markdown 基本機能と独立した追加機能）
   const [previewMode, setPreviewMode] = useState<'2d' | '3d'>('2d')
+  const [showAvatarDialog, setShowAvatarDialog] = useState(false)
 
   return (
     <div className="h-screen flex flex-col">
@@ -57,6 +59,12 @@ DeskStageは、3D空間を利用した新しいプレゼンテーション体験
       <div className="bg-gray-100 border-b px-4 py-3 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-800">エディター</h1>
         <div className="flex gap-2">
+          <button
+            onClick={() => setShowAvatarDialog(true)}
+            className="px-3 py-1 rounded text-sm font-medium bg-purple-500 text-white hover:bg-purple-600 transition-colors"
+          >
+            アバター設定
+          </button>
           <button
             onClick={() => setViewMode('edit')}
             className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
@@ -145,6 +153,11 @@ DeskStageは、3D空間を利用した新しいプレゼンテーション体験
           </div>
         )}
       </div>
+      
+      {/* アバターダイアログ */}
+      {showAvatarDialog && (
+        <AvatarDialog onClose={() => setShowAvatarDialog(false)} />
+      )}
     </div>
   )
 }

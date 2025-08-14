@@ -1,18 +1,13 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { VRM, VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
+import { VRM, VRMUtils } from "@pixiv/three-vrm";
 import { useEffect, useState } from "react";
 import {
   createVRMAnimationClip,
   VRMAnimation,
-  VRMAnimationLoaderPlugin,
   VRMLookAtQuaternionProxy,
 } from "@pixiv/three-vrm-animation";
+import { vrmLoader } from "./vrmUtils";
 
-
-const loader = new GLTFLoader();
-loader.register((parser) => new VRMLoaderPlugin(parser));
-loader.register((parser) => new VRMAnimationLoaderPlugin(parser));
 
 export const Avatar = () => {
   const [vrmModel, setVrmModel] = useState<VRM | null>(null);
@@ -78,7 +73,7 @@ export const Avatar = () => {
       return;
     }
 
-    loader.load(modelUrl, (gltf) => {
+    vrmLoader.load(modelUrl, (gltf) => {
       const vrm: VRM = gltf.userData.vrm;
       console.log("VRM model loaded:", vrm);
 
@@ -107,7 +102,7 @@ export const Avatar = () => {
       return;
     }
 
-    loader.load(animationUrl, (gltf) => {
+    vrmLoader.load(animationUrl, (gltf) => {
       const vrmAnimations: VRMAnimation[] = gltf.userData.vrmAnimations;
       console.log("VRM animation loaded:", vrmAnimations);
       setVrmAnimation(vrmAnimations[0]);

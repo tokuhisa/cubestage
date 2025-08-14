@@ -1,5 +1,25 @@
 
 import { useState } from "react";
+import { vrmLoader } from "./vrmUtils";
+import { VRM, type VRMMeta } from "@pixiv/three-vrm";
+import * as THREE from "three";
+
+interface VRMMetadata {
+  title?: string;
+  version?: string;
+  author?: string;
+  contactInformation?: string;
+  reference?: string;
+  texture?: string;
+  allowedUserName?: string;
+  violentUssageName?: string;
+  sexualUssageName?: string;
+  commercialUssageName?: string;
+  otherPermissionUrl?: string;
+  licenseName?: string;
+  otherLicenseUrl?: string;
+  thumbnailUrl?: string;
+}
 
 interface AvatarDialogProps {
   onClose: () => void;
@@ -9,11 +29,77 @@ export const AvatarDialog = ({ onClose }: AvatarDialogProps) => {
   const [vrmFile, setVrmFile] = useState<File | null>(null);
   const [vrmaFile, setVrmaFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [vrmMetadata, setVrmMetadata] = useState<VRMMetadata | null>(null);
+  const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
+
+  const loadVrmMetadata = async (file: File) => {
+    setIsLoadingMetadata(true);
+    try {
+      const url = URL.createObjectURL(file);
+      vrmLoader.load(url, (gltf) => {
+        const vrm: VRM = gltf.userData.vrm;
+        const meta: VRMMeta = vrm.meta;
+        
+        // サムネイル画像のURL生成関数
+        const getThumbnailUrl = (thumbnail: HTMLImageElement | THREE.Texture | undefined) => {
+          if (!thumbnail) return undefined;
+          
+          if (thumbnail instanceof HTMLImageElement) {
+            return thumbnail.src;
+          } else if ('image' in thumbnail && thumbnail.image instanceof HTMLImageElement) {
+            return thumbnail.image.src;
+          }
+          return undefined;
+        };
+
+        if (meta.metaVersion === '1') {
+          // VRM 1.0 format
+          setVrmMetadata({
+            title: meta.name,
+            version: meta.version,
+            author: meta.authors?.[0],
+            contactInformation: meta.contactInformation,
+            reference: meta.references?.[0],
+            allowedUserName: meta.avatarPermission,
+            violentUssageName: meta.allowExcessivelyViolentUsage ? 'Allow' : 'Disallow',
+            sexualUssageName: meta.allowExcessivelySexualUsage ? 'Allow' : 'Disallow',
+            commercialUssageName: meta.commercialUsage,
+            licenseName: meta.licenseUrl,
+            otherLicenseUrl: meta.otherLicenseUrl,
+            thumbnailUrl: getThumbnailUrl(meta.thumbnailImage),
+          });
+        } else {
+          // VRM 0.x format
+          setVrmMetadata({
+            title: meta.title,
+            version: meta.version,
+            author: meta.author,
+            contactInformation: meta.contactInformation,
+            reference: meta.reference,
+            allowedUserName: meta.allowedUserName,
+            violentUssageName: meta.violentUssageName,
+            sexualUssageName: meta.sexualUssageName,
+            commercialUssageName: meta.commercialUssageName,
+            licenseName: meta.licenseName,
+            otherLicenseUrl: meta.otherLicenseUrl,
+            thumbnailUrl: getThumbnailUrl(meta.texture),
+          });
+        }
+        
+        URL.revokeObjectURL(url);
+        setIsLoadingMetadata(false);
+      });
+    } catch (error) {
+      console.error('Failed to load VRM metadata:', error);
+      setIsLoadingMetadata(false);
+    }
+  };
 
   const handleVrmFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.name.endsWith('.vrm')) {
       setVrmFile(file);
+      loadVrmMetadata(file);
     }
   };
 
@@ -55,8 +141,8 @@ export const AvatarDialog = ({ onClose }: AvatarDialogProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-w-full mx-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000000]">
+      <div className="bg-white rounded-lg p-6 w-[32rem] max-w-full mx-4 max-h-[80vh] overflow-y-auto">
         <h2 className="text-xl font-semibold mb-4">アバター設定</h2>
         
         <div className="space-y-4">
@@ -76,6 +162,97 @@ export const AvatarDialog = ({ onClose }: AvatarDialogProps) => {
               </p>
             )}
           </div>
+          
+          {/* VRMメタ情報表示 */}
+          {vrmFile && (
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium text-gray-800 mb-2">VRMメタ情報</h3>
+              {isLoadingMetadata ? (
+                <p className="text-sm text-gray-500">メタ情報を読み込み中...</p>
+              ) : vrmMetadata ? (
+                <div className="space-y-3">
+                  {/* サムネイル画像 */}
+                  {vrmMetadata.thumbnailUrl && (
+                    <div className="flex justify-center">
+                      <img 
+                        src={vrmMetadata.thumbnailUrl} 
+                        alt="VRMサムネイル" 
+                        className="w-24 h-24 object-cover rounded-lg border-2 border-gray-200"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="space-y-2 text-xs">
+                    {vrmMetadata.title && (
+                      <div>
+                        <span className="font-medium text-gray-600">タイトル:</span>
+                        <span className="ml-2 text-gray-800">{vrmMetadata.title}</span>
+                      </div>
+                    )}
+                    {vrmMetadata.author && (
+                      <div>
+                        <span className="font-medium text-gray-600">作者:</span>
+                        <span className="ml-2 text-gray-800">{vrmMetadata.author}</span>
+                      </div>
+                    )}
+                    {vrmMetadata.version && (
+                      <div>
+                        <span className="font-medium text-gray-600">バージョン:</span>
+                        <span className="ml-2 text-gray-800">{vrmMetadata.version}</span>
+                      </div>
+                    )}
+                    {vrmMetadata.contactInformation && (
+                      <div>
+                        <span className="font-medium text-gray-600">連絡先:</span>
+                        <span className="ml-2 text-gray-800">{vrmMetadata.contactInformation}</span>
+                      </div>
+                    )}
+                    {vrmMetadata.reference && (
+                      <div>
+                        <span className="font-medium text-gray-600">参照:</span>
+                        <span className="ml-2 text-gray-800">{vrmMetadata.reference}</span>
+                      </div>
+                    )}
+                    {vrmMetadata.allowedUserName && (
+                      <div>
+                        <span className="font-medium text-gray-600">利用許可:</span>
+                        <span className="ml-2 text-gray-800">{vrmMetadata.allowedUserName}</span>
+                      </div>
+                    )}
+                    {vrmMetadata.violentUssageName && (
+                      <div>
+                        <span className="font-medium text-gray-600">暴力表現:</span>
+                        <span className="ml-2 text-gray-800">{vrmMetadata.violentUssageName}</span>
+                      </div>
+                    )}
+                    {vrmMetadata.sexualUssageName && (
+                      <div>
+                        <span className="font-medium text-gray-600">性的表現:</span>
+                        <span className="ml-2 text-gray-800">{vrmMetadata.sexualUssageName}</span>
+                      </div>
+                    )}
+                    {vrmMetadata.commercialUssageName && (
+                      <div>
+                        <span className="font-medium text-gray-600">商用利用:</span>
+                        <span className="ml-2 text-gray-800">{vrmMetadata.commercialUssageName}</span>
+                      </div>
+                    )}
+                    {vrmMetadata.licenseName && (
+                      <div>
+                        <span className="font-medium text-gray-600">ライセンス:</span>
+                        <span className="ml-2 text-gray-800">{vrmMetadata.licenseName}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-red-500">メタ情報の読み込みに失敗しました</p>
+              )}
+            </div>
+          )}
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

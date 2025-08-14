@@ -137,7 +137,7 @@ export const Stage = (props: Props) => {
         }}
       >
         {/* 照明設定（プロジェクター風） */}
-        <ambientLight intensity={0.2} />
+        <ambientLight intensity={1} />
         <directionalLight position={[10, 15, 5]} intensity={0.6} />
         <pointLight position={[0, 8, 0]} intensity={0.4} />
         {/* プロジェクター光源（天井近くのプロジェクターに合わせる） */}

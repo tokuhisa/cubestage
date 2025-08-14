@@ -10,13 +10,13 @@ import { MarkdownContextProvider } from "./MarkdownContext";
 import { JavaScriptExecutor } from "./directives/JavaScriptExecutor";
 import { TextInput } from "./directives/TextInput";
 import { Button } from "./directives/Button";
-import { ResultDisplay } from "./directives/ResultDisplay";
+import { ValueDisplay } from "./directives/ValueDisplay";
 
 const components = {
   js: JavaScriptExecutor,
   textinput: TextInput,
   button: Button,
-  resultdisplay: ResultDisplay,
+  value: ValueDisplay,
 };
 
 export interface Props {

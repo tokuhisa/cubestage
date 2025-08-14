@@ -4,7 +4,7 @@ import { handleJavascriptExecutorNode } from "./JavaScriptExecutor";
 import {VFile} from 'vfile'
 import { handleButtonNode } from "./Button";
 import { handleTextInputNode } from "./TextInput";
-import { handleResultDisplayNode } from "./ResultDisplay";
+import { handleValueDisplayNode } from "./ValueDisplay";
 
 /**
  * Remark plugin to handle custom directives
@@ -20,7 +20,7 @@ export function directiveHandler() {
         handleJavascriptExecutorNode(node, file);
         handleButtonNode(node);
         handleTextInputNode(node);
-        handleResultDisplayNode(node);
+        handleValueDisplayNode(node);
       }
     });
   };

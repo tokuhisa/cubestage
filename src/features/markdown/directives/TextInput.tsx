@@ -20,7 +20,7 @@ export const handleTextInputNode = (
 };
 
 export interface Props {
-  id?: string;
+  name?: string;
   placeholder?: string;
   defaultValue?: string;
   type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
@@ -35,7 +35,7 @@ export interface Props {
  */
 export const TextInput = (props: Props) => {
   const {
-    id,
+    name,
     placeholder = "Enter text...",
     defaultValue = "",
     type = "text",
@@ -45,27 +45,24 @@ export const TextInput = (props: Props) => {
     children
   } = props;
 
-  const [value, setValue] = useState<string>(defaultValue);
   const [isDirty, setIsDirty] = useState(false);
   const generatedId = useId();
-  const inputId = id ?? generatedId;
-  const { setInputValue } = useMarkdownContext();
+  const inputId = name ?? generatedId;
+  const { setInputValue, inputValues } = useMarkdownContext();
+  const value = inputValues[inputId] || defaultValue;
+
+  useEffect(() => {
+    setInputValue(inputId, defaultValue);
+  }, [defaultValue, setInputValue, inputId]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
-    setValue(newValue);
     setIsDirty(true);
     // Store value in context for access by other components
     setInputValue(inputId, newValue);
   };
 
-  // Initialize context value
-  useEffect(() => {
-    setInputValue(inputId, value);
-  }, [inputId, value, setInputValue]);
-
   const handleReset = () => {
-    setValue(defaultValue);
     setIsDirty(false);
     setInputValue(inputId, defaultValue);
   };
@@ -104,24 +101,6 @@ export const TextInput = (props: Props) => {
             </button>
           )}
         </div>
-
-        {value && (
-          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-sm text-blue-800">
-              <strong>Current value:</strong> {value}
-            </p>
-            {type === 'email' && value && !value.includes('@') && (
-              <p className="text-sm text-red-600 mt-1">
-                Please enter a valid email address
-              </p>
-            )}
-            {type === 'url' && value && !value.startsWith('http') && (
-              <p className="text-sm text-red-600 mt-1">
-                URL should start with http:// or https://
-              </p>
-            )}
-          </div>
-        )}
 
         {required && !value && isDirty && (
           <p className="text-sm text-red-600">

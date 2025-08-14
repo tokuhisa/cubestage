@@ -46,6 +46,19 @@ DeskStageは、3D空間を利用した新しいプレゼンテーション体験
 ---
 
 **このエディターで自由にMarkdownを編集して、3D空間での新しいプレゼンテーション体験をお楽しみください！**
+
+
+::textinput{name=text defaultValue=ABC}
+
+:::js{eventId=script}
+export const answer = "Hello, world!" + inputs.text;
+console.log("Answer: " + answer);
+:::
+
+::button[Execute]{eventId=script}
+
+Answer -> :value{name=answer}
+
 `);
 
   const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">(

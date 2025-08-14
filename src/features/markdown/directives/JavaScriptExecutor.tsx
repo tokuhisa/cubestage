@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getQuickJS } from "quickjs-emscripten";
-import { useMarkdownContext, type ExecutionResult } from "../MarkdownContext";
+import { useMarkdownContext } from "../MarkdownContext";
 import type {
   ContainerDirective,
   LeafDirective,
@@ -48,10 +48,8 @@ export const handleJavascriptExecutorNode = (
 };
 
 export interface Props {
-  children?: React.ReactNode;
   codeContent?: string;
   eventId?: string; // ID to trigger execution
-  resultId?: string;
 }
 
 /**
@@ -59,18 +57,20 @@ export interface Props {
  */
 export const JavaScriptExecutor = (props: Props) => {
   const [executionLog, setExecutionLog] = useState<string>("");
+  const [executionResult, setExecutionResult] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [showCode, setShowCode] = useState(false);
-  const { inputValues, executionTriggers, setExecutionResult } =
+  const { inputValues, executionTriggers, setInputValue } =
     useMarkdownContext();
-  const { codeContent, resultId, eventId } = props;
+  const { codeContent, eventId } = props;
   const eventTimestamp = executionTriggers[eventId ?? ""]?.timestamp ?? null;
 
   const executeCode = async () => {
     setIsLoading(true);
     setError("");
     setExecutionLog("");
+    setExecutionResult("");
     const code = codeContent ?? "";
 
     try {
@@ -100,35 +100,26 @@ export const JavaScriptExecutor = (props: Props) => {
       vm.setProp(vm.global, "console", consoleHandle);
 
       // Execute the code
-      const evalResult = vm.evalCode(code);
+      const evalResult = vm.evalCode(code, undefined, { type: "module" });
 
-      let executionResult: ExecutionResult;
       if (evalResult.error) {
         const errorMsg = vm.dump(evalResult.error) as unknown;
         const errorString =
-          typeof errorMsg === "string" ? errorMsg : String(errorMsg);
-        setError(`Error: ${errorString}`);
-        executionResult = { error: errorString, logs: logMessages };
+          typeof errorMsg === "string" ? errorMsg : safeStringify(errorMsg);
+        setError(errorString);
         evalResult.error.dispose();
       } else {
-        const output = vm.dump(evalResult.value) as unknown;
+        const output = vm.dump(evalResult.value) as object;
         if (output !== undefined && output !== null) {
-          const outputString = safeStringify(output);
-          setExecutionLog((prev) => prev + `Return value: ${outputString}\n`);
-          executionResult = {
-            value: output,
-            logs: logMessages,
-            display: outputString,
-          };
-        } else {
-          executionResult = { logs: logMessages };
+          const outputString = JSON.stringify(output);
+          setExecutionResult(outputString);
+          setExecutionLog((prev) => prev + `Result: ${outputString}\n`);
+          Object.entries(output).forEach(([key, value]) => {
+            const stringifiedValue = safeStringify(value);
+            setInputValue(key, stringifiedValue);
+          });
         }
         evalResult.value.dispose();
-      }
-
-      // Store result in context if resultId is provided
-      if (resultId) {
-        setExecutionResult(resultId, executionResult);
       }
 
       // Cleanup
@@ -138,11 +129,7 @@ export const JavaScriptExecutor = (props: Props) => {
       vm.dispose();
     } catch (err) {
       const errorString = err instanceof Error ? err.message : String(err);
-      const errorMessage = `Execution error: ${errorString}`;
-      setError(errorMessage);
-      if (resultId) {
-        setExecutionResult(resultId, { error: errorMessage });
-      }
+      setError(errorString);
     } finally {
       setIsLoading(false);
     }
@@ -157,16 +144,11 @@ export const JavaScriptExecutor = (props: Props) => {
   }, [eventTimestamp]);
 
   return (
-    <div className="border border-gray-300 rounded-lg p-4 my-4">
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="text-sm font-semibold text-gray-700">
+    <div className="flex flex-col border border-gray-300 rounded-lg p-4 my-4 gap-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-gray-700 mt-0 mb-0">
           JavaScript Execution
-          {resultId && (
-            <span className="ml-2 text-xs text-gray-500">
-              (ID: {props.resultId})
-            </span>
-          )}
-        </h4>
+        </p>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -189,9 +171,9 @@ export const JavaScriptExecutor = (props: Props) => {
       </div>
 
       {showCode && (
-        <div className="mb-3">
+        <div>
           <div className="text-xs text-gray-600 mb-1">JavaScript Code:</div>
-          <pre className="bg-gray-100 border p-3 rounded text-sm overflow-x-auto">
+          <pre className="bg-gray-100 border rounded text-sm overflow-x-auto mt-0 mb-0">
             <code className="text-gray-900">{codeContent}</code>
           </pre>
         </div>
@@ -205,8 +187,14 @@ export const JavaScriptExecutor = (props: Props) => {
 
       {executionLog && (
         <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded text-sm">
-          <strong>Output:</strong>
+          <strong>ログ:</strong>
           <pre className="mt-1 whitespace-pre-wrap">{executionLog}</pre>
+        </div>
+      )}
+
+      {executionResult && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 px-3 py-2 rounded text-sm mb-3">
+          <strong>結果:</strong> {executionResult}
         </div>
       )}
     </div>

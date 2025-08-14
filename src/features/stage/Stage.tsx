@@ -1,6 +1,7 @@
 import { useMemo, type JSX } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { ContactShadows, Environment, Html, OrbitControls, Box, Plane } from '@react-three/drei'
+import { Avatar } from '../avatar/Avatar'
 
 // プレゼンテーション会場のセットアップ
 function PresentationHall() {
@@ -82,7 +83,7 @@ function PresentationHall() {
       </Box>
 
       {/* 演台（スクリーン前の右端に配置、床に接触） */}
-      <Box args={[1.2, 1.5, 0.8]} position={[6, -0.25, -4.5]}>
+      <Box args={[1.0, 1.2, 0.8]} position={[6, -0.4, -4.5]}>
         <meshStandardMaterial color="#8b4513" />
       </Box>
     </>
@@ -140,11 +141,15 @@ export const Stage = (props: Props) => {
         enablePan={true}
         enableZoom={true}
         enableRotate={true}
-        maxPolarAngle={Math.PI / 2}
+        maxPolarAngle={Math.PI}
         minDistance={3}
         maxDistance={15}
         target={[0, 1, -2]}
       />
+
+      <group position={[6, -1, -5.2]} rotation={[0, Math.PI, 0]}>
+        <Avatar />
+      </group>
     </Canvas>
   )
 }

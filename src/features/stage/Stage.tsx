@@ -46,7 +46,7 @@ function PresentationHall() {
       </Plane>
 
       {/* スクリーンフレーム */}
-      <Box args={[15.5, 8.5, 0.1]} position={[0, 4.5, -6.85]}>
+      <Box args={[16.5, 9.5, 0.1]} position={[0, 4.5, -6.85]}>
         <meshStandardMaterial color="#2a2a2a" />
       </Box>
 
@@ -120,8 +120,8 @@ export const Stage = (props: Props) => {
         transform
         occlude="blending"
         style={{
-          width: '600px',
-          height: '320px',
+          width: '640px',
+          height: '360px',
           background: 'rgba(255,255,255,0.95)',
           border: 'none',
           boxShadow: '0 0 40px rgba(255,255,255,0.6), 0 0 80px rgba(200,200,255,0.3)',

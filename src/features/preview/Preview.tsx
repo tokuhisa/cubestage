@@ -30,7 +30,9 @@ export const Preview = (props: Props) => {
       }
 
       setContents(sceneTexts);
-      setCurrentScene(0);
+      setCurrentScene(prev => {
+        return Math.min(prev, sceneTexts.length - 1);
+      });
     };
 
     update().catch((err: unknown) => {

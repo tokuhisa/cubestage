@@ -17,12 +17,6 @@ export const useMarkdownContext = () => {
   return context;
 };
 
-export interface ExecutionResult {
-  value?: string;
-  error?: string;
-  logs?: string[];
-}
-
 interface MarkdownContextProviderProps {
   children: ReactNode;
 }

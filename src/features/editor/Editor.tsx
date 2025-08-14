@@ -1,6 +1,6 @@
-import { useState } from "react"
-import { Preview } from "../preview/Preview"
-import { AvatarDialog } from "../avatar/AvatarDialog"
+import { useState } from "react";
+import { Preview } from "../preview/Preview";
+import { AvatarDialog } from "../avatar/AvatarDialog";
 
 export function Editor() {
   const [markdownText, setMarkdownText] = useState(`# DeskStage
@@ -46,12 +46,19 @@ DeskStageは、3D空間を利用した新しいプレゼンテーション体験
 ---
 
 **このエディターで自由にMarkdownを編集して、3D空間での新しいプレゼンテーション体験をお楽しみください！**
-`)
-  
-  const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('split')
+`);
+
+  const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">(
+    "split",
+  );
   // 2D / 3D プレビュー切替（Markdown 基本機能と独立した追加機能）
-  const [previewMode, setPreviewMode] = useState<'2d' | '3d'>('2d')
-  const [showAvatarDialog, setShowAvatarDialog] = useState(false)
+  const [previewMode, setPreviewMode] = useState<"2d" | "3d">("2d");
+  const [showAvatarDialog, setShowAvatarDialog] = useState(false);
+  const [debugMode, setDebugMode] = useState({
+    enabled: false,
+    showCameraInfo: true,
+    showGrid: true,
+  });
 
   return (
     <div className="h-screen flex flex-col">
@@ -66,31 +73,31 @@ DeskStageは、3D空間を利用した新しいプレゼンテーション体験
             アバター設定
           </button>
           <button
-            onClick={() => setViewMode('edit')}
+            onClick={() => setViewMode("edit")}
             className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-              viewMode === 'edit'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              viewMode === "edit"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
           >
             編集
           </button>
           <button
-            onClick={() => setViewMode('split')}
+            onClick={() => setViewMode("split")}
             className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-              viewMode === 'split'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              viewMode === "split"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
           >
             分割
           </button>
           <button
-            onClick={() => setViewMode('preview')}
+            onClick={() => setViewMode("preview")}
             className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-              viewMode === 'preview'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              viewMode === "preview"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
           >
             プレビュー
@@ -101,10 +108,14 @@ DeskStageは、3D空間を利用した新しいプレゼンテーション体験
       {/* エディターとプレビューエリア */}
       <div className="flex-1 flex overflow-hidden">
         {/* エディターエリア */}
-        {(viewMode === 'edit' || viewMode === 'split') && (
-          <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} flex flex-col border-r`}>
+        {(viewMode === "edit" || viewMode === "split") && (
+          <div
+            className={`${viewMode === "split" ? "w-1/2" : "w-full"} flex flex-col border-r`}
+          >
             <div className="bg-gray-50 px-4 py-2 border-b">
-              <h2 className="text-sm font-medium text-gray-700">Markdown編集</h2>
+              <h2 className="text-sm font-medium text-gray-700">
+                Markdown編集
+              </h2>
             </div>
             <textarea
               value={markdownText}
@@ -117,47 +128,73 @@ DeskStageは、3D空間を利用した新しいプレゼンテーション体験
         )}
 
         {/* プレビューエリア */}
-        {(viewMode === 'preview' || viewMode === 'split') && (
-          <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} flex flex-col`}>
+        {(viewMode === "preview" || viewMode === "split") && (
+          <div
+            className={`${viewMode === "split" ? "w-1/2" : "w-full"} flex flex-col`}
+          >
             <div className="bg-gray-50 px-4 py-2 border-b flex items-center justify-between">
-              <h2 className="text-sm font-medium text-gray-700">プレビュー ({previewMode.toUpperCase()})</h2>
+              <h2 className="text-sm font-medium text-gray-700">
+                プレビュー ({previewMode.toUpperCase()})
+              </h2>
               <div className="flex gap-2 items-center">
                 <span className="text-xs text-gray-500 select-none">表示:</span>
                 <button
-                  onClick={() => setPreviewMode('2d')}
+                  onClick={() => setPreviewMode("2d")}
                   className={`px-2 rounded text-xs font-medium transition-colors ${
-                    previewMode === '2d'
-                      ? 'bg-indigo-500 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    previewMode === "2d"
+                      ? "bg-indigo-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
                   2D
                 </button>
                 <button
-                  onClick={() => setPreviewMode('3d')}
+                  onClick={() => setPreviewMode("3d")}
                   className={`px-2 rounded text-xs font-medium transition-colors ${
-                    previewMode === '3d'
-                      ? 'bg-indigo-500 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    previewMode === "3d"
+                      ? "bg-indigo-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
                   3D
+                </button>
+                <span className="text-xs text-gray-500 select-none ml-2">
+                  デバッグ:
+                </span>
+                <button
+                  onClick={() =>
+                    setDebugMode((prev) => ({
+                      ...prev,
+                      enabled: !prev.enabled,
+                    }))
+                  }
+                  className={`px-2 rounded text-xs font-medium transition-colors ${
+                    debugMode.enabled
+                      ? "bg-orange-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  {debugMode.enabled ? "ON" : "OFF"}
                 </button>
               </div>
             </div>
             <div className="flex-1 overflow-auto bg-white flex justify-center">
               <div className="w-full flex justify-center">
-                <Preview text={markdownText} previewMode={previewMode} />
+                <Preview
+                  text={markdownText}
+                  previewMode={previewMode}
+                  debugMode={debugMode.enabled ? debugMode : undefined}
+                />
               </div>
             </div>
           </div>
         )}
       </div>
-      
+
       {/* アバターダイアログ */}
       {showAvatarDialog && (
         <AvatarDialog onClose={() => setShowAvatarDialog(false)} />
       )}
     </div>
-  )
+  );
 }

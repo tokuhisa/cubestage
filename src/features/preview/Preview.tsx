@@ -5,10 +5,14 @@ import { Stage } from "../stage/Stage";
 export interface Props {
   text: string;
   previewMode: "2d" | "3d";
+  debugMode?: {
+    showCameraInfo: boolean;
+    showGrid: boolean;
+  };
 }
 
 export const Preview = (props: Props) => {
-  const { text, previewMode } = props;
+  const { text, previewMode, debugMode } = props;
   const [contents, setContents] = useState<string[]>([]);
   const [currentScene, setCurrentScene] = useState(0);
 
@@ -58,7 +62,7 @@ export const Preview = (props: Props) => {
       {previewMode === "2d" ? (
         <MarkdownView text={contents[currentScene] ?? ""} />
       ) : (
-        <Stage>
+        <Stage debugMode={debugMode}>
           <MarkdownView text={contents[currentScene] ?? ""} />
         </Stage>
       )}

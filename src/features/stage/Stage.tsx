@@ -1,34 +1,51 @@
-import { useMemo, type JSX } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { ContactShadows, Environment, Html, OrbitControls, Box, Plane } from '@react-three/drei'
-import { Avatar } from '../avatar/Avatar'
+import { useMemo, useState, type JSX } from "react";
+import { Canvas, type RootState } from "@react-three/fiber";
+import {
+  ContactShadows,
+  Environment,
+  Html,
+  OrbitControls,
+  Box,
+  Plane,
+} from "@react-three/drei";
+import { Avatar } from "../avatar/Avatar";
+import { DebugOverlay } from "./DebugOverlay";
+import { DebugGrid } from "./DebugGrid";
 
 // プレゼンテーション会場のセットアップ
 function PresentationHall() {
   // 椅子を配置するための関数
   const chairs = useMemo(() => {
-    const chairPositions = []
+    const chairPositions = [];
     for (let row = 0; row < 4; row++) {
       for (let col = 0; col < 8; col++) {
         chairPositions.push([
           (col - 3.5) * 1.5, // x座標
           -0.8, // y座標（床より少し上）
-          2 + row * 1.2 // z座標（スクリーンから離れて）
-        ])
+          2 + row * 1.2, // z座標（スクリーンから離れて）
+        ]);
       }
     }
-    return chairPositions
-  }, [])
+    return chairPositions;
+  }, []);
 
   return (
     <>
       {/* 床 */}
-      <Plane args={[20, 15]} rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]}>
+      <Plane
+        args={[20, 15]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, -1, 0]}
+      >
         <meshStandardMaterial color="#2a2a2a" />
       </Plane>
 
       {/* 天井 */}
-      <Plane args={[20, 15]} rotation={[Math.PI / 2, 0, 0]} position={[0, 10, 0]}>
+      <Plane
+        args={[20, 15]}
+        rotation={[Math.PI / 2, 0, 0]}
+        position={[0, 10, 0]}
+      >
         <meshStandardMaterial color="#f0f0f0" />
       </Plane>
 
@@ -38,10 +55,18 @@ function PresentationHall() {
       </Plane>
 
       {/* 左右の壁 */}
-      <Plane args={[15, 11]} rotation={[0, Math.PI / 2, 0]} position={[-10, 4.5, 0]}>
+      <Plane
+        args={[15, 11]}
+        rotation={[0, Math.PI / 2, 0]}
+        position={[-10, 4.5, 0]}
+      >
         <meshStandardMaterial color="#1a1a1a" />
       </Plane>
-      <Plane args={[15, 11]} rotation={[0, -Math.PI / 2, 0]} position={[10, 4.5, 0]}>
+      <Plane
+        args={[15, 11]}
+        rotation={[0, -Math.PI / 2, 0]}
+        position={[10, 4.5, 0]}
+      >
         <meshStandardMaterial color="#1a1a1a" />
       </Plane>
 
@@ -87,69 +112,102 @@ function PresentationHall() {
         <meshStandardMaterial color="#8b4513" />
       </Box>
     </>
-  )
+  );
 }
 
 export interface Props {
   children?: JSX.Element | JSX.Element[];
+  debugMode?: {
+    showCameraInfo: boolean;
+    showGrid: boolean;
+  };
 }
 
 export const Stage = (props: Props) => {
+  console.log("Stage component rendered");
+  const { debugMode } = props;
+  const [rootState, setRootState] = useState<RootState | null>(null);
+
   return (
-    <Canvas camera={{ position: [0, 4, 8], fov: 75 }}>
-      {/* 照明設定（プロジェクター風） */}
-      <ambientLight intensity={0.2} />
-      <directionalLight position={[10, 15, 5]} intensity={0.6} />
-      <pointLight position={[0, 8, 0]} intensity={0.4} />
-      {/* プロジェクター光源（天井近くのプロジェクターに合わせる） */}
-      <spotLight 
-        position={[0, 9.5, 3]} 
-        target-position={[0, 4.5, -6.8]}
-        intensity={1.5}
-        angle={0.35}
-        penumbra={0.2}
-        color="#ffffff"
-      />
-      
-      {/* プレゼンテーション会場 */}
-      <PresentationHall />
-      
-      {/* スライド（MarkdownView）を壁に投影風に表示 */}
-      <Html
-        position={[0, 4.5, -6.75]}
-        transform
-        occlude="blending"
-        style={{
-          width: '640px',
-          height: '360px',
-          background: 'rgba(255,255,255,0.95)',
-          border: 'none',
-          boxShadow: '0 0 40px rgba(255,255,255,0.6), 0 0 80px rgba(200,200,255,0.3)',
-          overflow: 'auto',
-          backdropFilter: 'blur(1px)'
+    <div className="relative w-full h-full">
+      <Canvas
+        camera={{ position: [0, 4, 8], fov: 75 }}
+        onCreated={(state) => {
+          setRootState(state);
         }}
       >
-        {props.children}
-      </Html>
-      
-      {/* 環境と影 */}
-      <Environment preset="warehouse" />
-      <ContactShadows position={[0, -0.99, 0]} opacity={0.4} scale={15} blur={2} far={20} />
-      
-      {/* カメラコントロール */}
-      <OrbitControls 
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={true}
-        maxPolarAngle={Math.PI}
-        minDistance={3}
-        maxDistance={15}
-        target={[0, 1, -2]}
-      />
+        {/* 照明設定（プロジェクター風） */}
+        <ambientLight intensity={0.2} />
+        <directionalLight position={[10, 15, 5]} intensity={0.6} />
+        <pointLight position={[0, 8, 0]} intensity={0.4} />
+        {/* プロジェクター光源（天井近くのプロジェクターに合わせる） */}
+        <spotLight
+          position={[0, 9.5, 3]}
+          target-position={[0, 4.5, -6.8]}
+          intensity={1.5}
+          angle={0.35}
+          penumbra={0.2}
+          color="#ffffff"
+        />
 
-      <group position={[6, -1, -5.5]} rotation={[0, Math.PI, 0]}>
-        <Avatar />
-      </group>
-    </Canvas>
-  )
-}
+        {/* プレゼンテーション会場 */}
+        <PresentationHall />
+
+        {/* デバッググリッド */}
+        {debugMode && <DebugGrid visible={debugMode.showGrid} />}
+
+        {/* スライド（MarkdownView）を壁に投影風に表示 */}
+        <Html
+          position={[0, 4.5, -6.75]}
+          transform
+          occlude="blending"
+          style={{
+            width: "640px",
+            height: "360px",
+            background: "rgba(255,255,255,0.95)",
+            border: "none",
+            boxShadow:
+              "0 0 40px rgba(255,255,255,0.6), 0 0 80px rgba(200,200,255,0.3)",
+            overflow: "auto",
+            backdropFilter: "blur(1px)",
+          }}
+        >
+          {props.children}
+        </Html>
+
+        {/* 環境と影 */}
+        <Environment preset="warehouse" />
+        <ContactShadows
+          position={[0, -0.99, 0]}
+          opacity={0.4}
+          scale={15}
+          blur={2}
+          far={20}
+        />
+
+        {/* カメラコントロール */}
+        <OrbitControls
+          enablePan={true}
+          enableZoom={true}
+          enableRotate={true}
+          maxPolarAngle={Math.PI}
+          minDistance={3}
+          maxDistance={15}
+          target={[0, 1, -2]}
+        />
+
+        <group position={[6, -1, -5.5]} rotation={[0, Math.PI, 0]}>
+          <Avatar />
+        </group>
+      </Canvas>
+
+      {/* デバッグオーバーレイ */}
+      {debugMode && (
+        <DebugOverlay
+          showCameraInfo={debugMode.showCameraInfo}
+          camera={rootState?.camera}
+        />
+      )}
+    </div>
+  );
+};

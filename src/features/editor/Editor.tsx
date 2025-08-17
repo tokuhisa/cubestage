@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Preview } from "../preview/Preview";
 import { AvatarDialog } from "../avatar/AvatarDialog";
+import { ScreenCaptureDialog } from "../screen-capture/ScreenCaptureDialog";
 
 export function Editor() {
   const [markdownText, setMarkdownText] = useState(`# DeskStage
@@ -59,6 +60,8 @@ console.log("Answer: " + answer);
 
 Answer -> :value{name=answer}
 
+::screencapture
+
 `);
 
   const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">(
@@ -67,6 +70,7 @@ Answer -> :value{name=answer}
   // 2D / 3D プレビュー切替（Markdown 基本機能と独立した追加機能）
   const [previewMode, setPreviewMode] = useState<"2d" | "3d">("2d");
   const [showAvatarDialog, setShowAvatarDialog] = useState(false);
+  const [showScreenCaptureDialog, setShowScreenCaptureDialog] = useState(false);
   const [debugMode, setDebugMode] = useState({
     enabled: false,
     showCameraInfo: true,
@@ -79,6 +83,12 @@ Answer -> :value{name=answer}
       <div className="bg-gray-100 border-b px-4 py-3 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-800">エディター</h1>
         <div className="flex gap-2">
+          <button
+            onClick={() => setShowScreenCaptureDialog(true)}
+            className="px-3 py-1 rounded text-sm font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
+          >
+            スクリーンキャプチャ
+          </button>
           <button
             onClick={() => setShowAvatarDialog(true)}
             className="px-3 py-1 rounded text-sm font-medium bg-purple-500 text-white hover:bg-purple-600 transition-colors"
@@ -208,6 +218,12 @@ Answer -> :value{name=answer}
       {showAvatarDialog && (
         <AvatarDialog onClose={() => setShowAvatarDialog(false)} />
       )}
+      
+      {/* スクリーンキャプチャダイアログ */}
+      <ScreenCaptureDialog 
+        isOpen={showScreenCaptureDialog}
+        onClose={() => setShowScreenCaptureDialog(false)} 
+      />
     </div>
   );
 }

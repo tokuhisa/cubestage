@@ -5,6 +5,7 @@ import {VFile} from 'vfile'
 import { handleButtonNode } from "./Button";
 import { handleTextInputNode } from "./TextInput";
 import { handleValueDisplayNode } from "./ValueDisplay";
+import { handleScreenCaptureNode } from "./ScreenCapture";
 
 /**
  * Remark plugin to handle custom directives
@@ -21,6 +22,7 @@ export function directiveHandler() {
         handleButtonNode(node);
         handleTextInputNode(node);
         handleValueDisplayNode(node);
+        handleScreenCaptureNode(node);
       }
     });
   };

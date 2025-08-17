@@ -11,6 +11,7 @@ import {
 import { Avatar } from "../avatar/Avatar";
 import { DebugOverlay } from "./DebugOverlay";
 import { DebugGrid } from "./DebugGrid";
+import { ScreenCaptureContext, useScreenCapture } from "../screen-capture/ScreenCaptureContext";
 
 // プレゼンテーション会場のセットアップ
 function PresentationHall() {
@@ -127,6 +128,7 @@ export const Stage = (props: Props) => {
   console.log("Stage component rendered");
   const { debugMode } = props;
   const [rootState, setRootState] = useState<RootState | null>(null);
+  const screenCaptureContext = useScreenCapture();
 
   return (
     <div className="relative w-full h-full">
@@ -172,7 +174,10 @@ export const Stage = (props: Props) => {
             backdropFilter: "blur(1px)",
           }}
         >
-          {props.children}
+          {/** Workaround for context provider */}
+          <ScreenCaptureContext.Provider value={screenCaptureContext}>
+            {props.children}
+          </ScreenCaptureContext.Provider>
         </Html>
 
         {/* 環境と影 */}

@@ -11,12 +11,14 @@ import { JavaScriptExecutor } from "./directives/JavaScriptExecutor";
 import { TextInput } from "./directives/TextInput";
 import { Button } from "./directives/Button";
 import { ValueDisplay } from "./directives/ValueDisplay";
+import { ScreenCapture } from "./directives/ScreenCapture";
 
 const components = {
   js: JavaScriptExecutor,
   textinput: TextInput,
   button: Button,
   value: ValueDisplay,
+  screencapture: ScreenCapture
 };
 
 export interface Props {

@@ -1,6 +1,6 @@
-# DeskStage AI Coding Instructions
+# CubeStage AI Coding Instructions
 
-DeskStage is a 3D presentation tool that renders Markdown content in both traditional 2D views and immersive 3D environments using React, TypeScript, and Three.js.
+CubeStage is a 3D presentation tool that renders Markdown content in both traditional 2D views and immersive 3D environments using React, TypeScript, and Three.js.
 
 ## Architecture Overview
 

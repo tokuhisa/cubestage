@@ -22,7 +22,7 @@ npm run preview
 
 ## Project Architecture
 
-DeskStage is a 3D presentation tool that renders Markdown content in both traditional 2D views and immersive 3D environments. The application is built with React, TypeScript, and Three.js.
+CubeStage is a 3D presentation tool that renders Markdown content in both traditional 2D views and immersive 3D environments. The application is built with React, TypeScript, and Three.js.
 
 ### Core Components Structure
 

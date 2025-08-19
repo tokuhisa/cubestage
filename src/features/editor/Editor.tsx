@@ -4,11 +4,11 @@ import { AvatarDialog } from "../avatar/AvatarDialog";
 import { ScreenCaptureDialog } from "../screen-capture/ScreenCaptureDialog";
 
 export function Editor() {
-  const [markdownText, setMarkdownText] = useState(`# DeskStage
+  const [markdownText, setMarkdownText] = useState(`# CubeStage
 
 **3D空間プレゼンテーションツール**
 
-DeskStageは、3D空間を利用した新しいプレゼンテーション体験を作成するツールです。
+CubeStageは、3D空間を利用した新しいプレゼンテーション体験を作成するツールです。
 従来の平面的なスライドショーを超え、Markdownコンテンツを3Dビジュアライゼーションとして表示できます。
 
 ## 🌟 主な特徴
